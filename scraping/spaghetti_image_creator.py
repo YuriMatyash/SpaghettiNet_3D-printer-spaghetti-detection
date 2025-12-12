@@ -53,7 +53,7 @@ def extract_frames_by_time():
 
     # get starting ID for naming
     current_id = get_next_start_id(OUTPUT_IMG_DIR)
-    print(f"Starting numbering at: good_{current_id}")
+    print(f"Starting numbering at: spaghetti_{current_id}")
 
     total_extracted = 0
 
