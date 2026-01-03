@@ -5,8 +5,8 @@ SIZE_WIDTH = 224
 SIZE_HEIGHT = 224
 
 # Paths
-folder_path = "data/raw/good/images/"
-save_path = "data/processed/resolution_scaling/good/images/"
+folder_path = "datasets/detection/raw"
+save_path = "datasets/detection/resized"
 
 def process_all_images(source_folder, destination_folder, target_size=(SIZE_WIDTH, SIZE_HEIGHT)):
     # 1. Create destination directory if it doesn't exist
@@ -32,7 +32,7 @@ def process_all_images(source_folder, destination_folder, target_size=(SIZE_WIDT
             # --- FIX: Ensure extension is .jpg ---
             # Split filename and extension, then force .jpg
             base_name = os.path.splitext(filename)[0]
-            new_filename = f"1_{base_name}.jpg"
+            new_filename = f"{base_name}.jpg"
             save_file_path = os.path.join(destination_folder, new_filename)
 
             try:
