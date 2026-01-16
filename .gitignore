@@ -2,3 +2,4 @@
 /venv
 /datasets
 /temp
+__pycache__/
