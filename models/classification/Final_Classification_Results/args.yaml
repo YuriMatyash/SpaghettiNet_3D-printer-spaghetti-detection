@@ -1,7 +1,7 @@
 task: classify
 mode: train
-model: c:\Users\YuriM\Desktop\Projects\SpaghettiNet_3D-printer-spaghetti-detection\models\classification\yolo26n-cls.pt
-data: c:\Users\YuriM\Desktop\Projects\SpaghettiNet_3D-printer-spaghetti-detection\datasets\classification\final
+model: /home/yuri/projects/SpaghettiNet_3D-printer-spaghetti-detection/models/classification/yolo26n-cls.pt
+data: /home/yuri/projects/SpaghettiNet_3D-printer-spaghetti-detection/datasets/classification/final
 epochs: 20
 time: null
 patience: 100
@@ -10,9 +10,9 @@ imgsz: 224
 save: true
 save_period: -1
 cache: false
-device: cpu
+device: null
 workers: 8
-project: c:\Users\YuriM\Desktop\Projects\SpaghettiNet_3D-printer-spaghetti-detection\models\classification
+project: /home/yuri/projects/SpaghettiNet_3D-printer-spaghetti-detection/models/classification
 name: Final_Classification_Results
 exist_ok: true
 pretrained: true
@@ -29,7 +29,7 @@ amp: true
 fraction: 1.0
 profile: false
 freeze: null
-multi_scale: false
+multi_scale: 0.0
 compile: false
 overlap_mask: true
 mask_ratio: 4
@@ -82,6 +82,8 @@ cls: 0.5
 dfl: 1.5
 pose: 12.0
 kobj: 1.0
+rle: 1.0
+angle: 1.0
 nbs: 64
 hsv_h: 0.015
 hsv_s: 0.7
@@ -103,4 +105,4 @@ auto_augment: randaugment
 erasing: 0.4
 cfg: null
 tracker: botsort.yaml
-save_dir: C:\Users\YuriM\Desktop\Projects\SpaghettiNet_3D-printer-spaghetti-detection\models\classification\Final_Classification_Results
+save_dir: /home/yuri/projects/SpaghettiNet_3D-printer-spaghetti-detection/models/classification/Final_Classification_Results
