@@ -51,7 +51,7 @@ NUM_CLASSES = 1       # Binary classification (0=Normal, 1=Detached)
 
 # TRAINING
 BATCH_SIZE = 4        # Number of videos per batch
-EPOCHS = 20           # Total training passes
+EPOCHS = 100          # Total training passes
 LEARNING_RATE = 1e-4  # Adam optimizer learning rate
 TRAIN_SPLIT = 0.8     # 80% Training, 20% Validation
 
