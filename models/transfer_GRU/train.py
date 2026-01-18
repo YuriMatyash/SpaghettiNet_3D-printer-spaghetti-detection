@@ -1,40 +1,16 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torch.utils.data import DataLoader, random_split
+from torch.utils.data import DataLoader
 import glob
 import os
 import time
 
 # Custom modules
-from dataset import PrinterFrameDataset, create_smart_sliding_windows
+from dataset import PrinterFrameDataset
 from model import SpaghettiNet
 import hyperparams as hp
-
-def get_data_lists():
-    """
-    Iterates over dataset/video_1, dataset/video_2... 
-    and extracts mixed labels from each.
-    """
-    all_sequences = []
-    all_labels = []
-
-    # Find all video folders (video_1, video_2, etc.)
-    video_folders = glob.glob(os.path.join(hp.DATASET_ROOT, "*"))
-    video_folders = [f for f in video_folders if os.path.isdir(f)]
-    
-    print(f"Scanning {len(video_folders)} video folders in '{hp.DATASET_ROOT}'...")
-
-    for folder in video_folders:
-        seqs, lbls = create_smart_sliding_windows(folder)
-        all_sequences.extend(seqs)
-        all_labels.extend(lbls)
-        
-        # Optional: Print stats per folder
-        detach_count = sum(lbls)
-        print(f"  Folder '{os.path.basename(folder)}': {len(seqs)} sequences ({detach_count} detached)")
-
-    return all_sequences, all_labels
+from utils import get_data_lists
 
 def main():
     device = hp.DEVICE
