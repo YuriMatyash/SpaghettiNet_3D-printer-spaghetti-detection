@@ -25,7 +25,7 @@ By providing real-time monitoring and automated failure detection:
 
 ---
 
-## 📊 Dataset & Data Engineering
+## 📷 Dataset & Data Engineering
 A core contribution of this project is the creation of a custom dataset, as no comprehensive public datasets were available for these specific tasks.
 
 ### 1. Classification Data (Spaghetti Detection)
@@ -51,9 +51,17 @@ To optimize the data for training and ensure compatibility with our neural netwo
 * **Rationale:** This resolution provides an optimal balance between computational efficiency and preserving enough spatial detail for both failure classification and toolhead localization.
 
 
+## 📊 Exploratory Data Analysis (EDA)
 
-### 4. Bed Adhesion (Attention Mechanism)
-* **Focus:** This model utilizes an **Attention Mechanism** to monitor the interface between the printed object and the heatbed. It is designed to trigger an alert when the model detects subtle displacements or "warping" that indicate the print has detached.
+## 🛠️ Data Augmentations
+
+## 🤖 Model Selection and Training
+
+## 📈 Evaluation
+
+## 💯 End Summary
+
+
 
 ---
 
