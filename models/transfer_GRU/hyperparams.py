@@ -48,14 +48,18 @@ NUM_CLASSES = 1       # Binary classification (0=Normal, 1=Detached)
 
 # TRAINING
 BATCH_SIZE = 4        # Number of videos per batch
-EPOCHS = 100          # Total training passes
+EPOCHS = 200          # Total training passes
 LEARNING_RATE = 1e-4  # Adam optimizer learning rate
 TRAIN_SPLIT = 0.8     # 80% Training, 20% Validation
 
+# PERFORMANCE OPTIMIZATIONS
+NUM_WORKERS = 8             # Number of CPU processes loading data
+PIN_MEMORY = True           # Faster CPU->GPU transfer
+PERSISTENT_WORKERS = True   # Keeps workers alive between epochs (reduces startup lag)
 
 # PATHS
 DATASET_ROOT = "datasets/transfer_GRU/dataset"      # Folder for clean prints
-MODEL_SAVE_PATH = "models/transfer_GRU/spaghettinet_v1.pth"     # Where to save model weights
+MODEL_SAVE_PATH = "models/transfer_GRU/spaghettinet_v3.pth"     # Where to save model weights
 
 
 # INFERENCE / LIVE MONITORING

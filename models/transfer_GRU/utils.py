@@ -1,7 +1,9 @@
 import os
 import glob
 import re
-
+from sklearn.metrics import confusion_matrix
+import matplotlib.pyplot as plt
+import seaborn as sns
 import hyperparams as hp
 
 
@@ -27,6 +29,50 @@ def get_data_lists() -> tuple[list[list[str]], list[int]]:
         print(f"  Folder '{os.path.basename(folder)}': {len(seqs)}  sequences ({detach_count} detached)")
 
     return all_sequences, all_labels
+
+def plot_training_graph(train_losses, val_losses, val_accuracies):
+    epochs = range(1, len(train_losses) + 1)
+    
+    fig, ax1 = plt.subplots(figsize=(10, 6))
+    
+    # Left Axis: Loss
+    color = 'tab:red'
+    ax1.set_xlabel('Epoch')
+    ax1.set_ylabel('Loss', color=color)
+    l1 = ax1.plot(epochs, train_losses, color=color, linestyle='--', label='Train Loss')
+    l2 = ax1.plot(epochs, val_losses, color='tab:orange', label='Val Loss')
+    ax1.tick_params(axis='y', labelcolor=color)
+    ax1.grid(True, linestyle='--', alpha=0.6)
+
+    # Right Axis: Accuracy
+    ax2 = ax1.twinx()  
+    color = 'tab:blue'
+    ax2.set_ylabel('Accuracy (%)', color=color)
+    l3 = ax2.plot(epochs, val_accuracies, color=color, linewidth=2, label='Val Accuracy')
+    ax2.tick_params(axis='y', labelcolor=color)
+
+    lines = l1 + l2 + l3
+    labels = [l.get_label() for l in lines]
+    ax1.legend(lines, labels, loc='upper left')
+
+    plt.title('Training Performance: Loss & Accuracy')
+    plt.tight_layout()
+    plt.savefig('training_graph.png', dpi=300)
+    print("   Saved 'training_graph.png'")
+
+def plot_confusion_matrix(y_true, y_pred):
+    cm = confusion_matrix(y_true, y_pred)
+    
+    plt.figure(figsize=(6, 5))
+    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', 
+                xticklabels=['Normal', 'Detached'], 
+                yticklabels=['Normal', 'Detached'])
+    plt.xlabel('Predicted Label')
+    plt.ylabel('True Label')
+    plt.title('Final Validation Confusion Matrix')
+    plt.tight_layout()
+    plt.savefig('confusion_matrix.png', dpi=300)
+    print("   Saved 'confusion_matrix.png'")
 
 
 #############################################################################
