@@ -50,14 +50,111 @@ To optimize the data for training and ensure compatibility with our neural netwo
 * **Resolution Scaling:** All captured images and video frames were resized to a standardized resolution of **224x224 pixels**.
 * **Rationale:** This resolution provides an optimal balance between computational efficiency and preserving enough spatial detail for both failure classification and toolhead localization.
 
+### MobileNet-GRU (Print detachment from Print bed classification)
+For the task of classiflying wether or not a print had detached from the print bed using a GRU we had to collect sequences of printing images.
+
+* **Sourcing:** We curated a dataset by scraping YouTube videos of failed 3D prints that detached mid-print.
+* **Refinement:** To optimize computational efficiency, we downsampled the video to 1 FPS(frame per second) and focused on 16-second sequences, rather than processing every frame of the entire video.
+* **Final Dataset Creation:** After isolating the specific "detachment frame" in our raw footage, we extracted a buffer of 38 frames per video:
+    * **Frames 1-25:** Clean printing (normal operation).
+    * **Frame 26:** The Detachment Event (moment of failure).
+    * **Frames 27-38:** Post-detachment (failure state).
+
+    **Sliding Window Generation:**
+    We applied a sliding window of size 16 (representing 16 seconds) over these 38 frames. This method generated a balanced dataset for each video source:
+    * **10 Clean Sequences** (Windows ending before frame 26)
+    * **13 Detachment Sequences** (Windows containing the detachment event or post-detachment frames)
+
+<img src="explaination_data\transfer_GRU_data\1_pre.png" width="244" height="244" alt="Alt Text">
+<img src="explaination_data\transfer_GRU_data\1_detach.png" width="244" height="244" alt="Alt Text">
+<img src="explaination_data\transfer_GRU_data\1_post.png" width="244" height="244" alt="Alt Text">
 
 ## 📊 Exploratory Data Analysis (EDA)
 
+### MobileNet-GRU (Print detachment from Print bed classification)
+
+To validate the feasibility of a GRU-based approach, we analyzed the class distribution and temporal characteristics of our video dataset.
+
+### 1. Class Balance
+Training on raw video footage often leads to severe class imbalance (e.g., 10 hours of "clean" printing vs. 5 seconds of failure). To address this, we implemented a smart sliding window strategy that extracts fixed-length sequences (16 frames) from each video.
+
+As shown below, this method downsamples the "Clean" majority class while preserving all "Detachment" instances, resulting in a training set that is effectively balanced.
+
+<img src="explaination_data\transfer_GRU_data\eda_class_balance.png" width="500" height="500" alt="Alt Text">
+
+* **Clean Sequences:** Windows ending before the failure occurs.
+* **Detachment Sequences:** Windows containing the detachment event or post-failure chaos.
+* **Result:** The model is not biased toward predicting "Normal," improving its sensitivity to actual failures.
+
+### 2. Temporal Motion Analysis
+We hypothesized that a Recurrent Neural Network (GRU) would be effective because print failures exhibit a distinct temporal signature compared to normal printing.
+
+To verify this, we calculated the **Frame-to-Frame Pixel Difference (MSE)** across a printing timeline.
+
+<img src="explaination_data\transfer_GRU_data\eda_temporal_motion.png" width="500" height="300" alt="Alt Text">
+
+**Key Observations:**
+* **Stable Phase (Blue):** During normal printing, the pixel variance is low and consistent. The print head moves, but the object remains stationary relative to the bed.
+* **The Spike (Red):** The moment of detachment creates a massive spike in motion energy. This confirms that there is a strong, sudden "motion signal" that the GRU can learn to detect.
+* **Chaotic Phase:** Post-detachment, the variance remains high and unpredictable (the "spaghetti" effect), distinguishing it clearly from the stable phase.
+
 ## 🛠️ Data Augmentations
+
+### MobileNet-GRU (Print detachment from Print bed classification)
+To prevent overfitting and ensure the model generalizes to different environments (e.g., dark rooms, tilted webcams, out-of-focus lenses), we applied the following augmentations during training.
+
+| Augmentation | Explanation | Rationale | Metric |
+| :--- | :--- | :--- | :--- |
+| **Resize** | Scales all input images to a fixed square dimension. | Standardizes input size for the MobileNetV3 architecture. | **224 × 224 pixels** |
+| **Temporal Consistency** | Applies the *exact same* random augmentation to all 16 frames in a window. | **Crucial:** Prevents the "strobe light" effect. If frames were augmented individually, the GRU would interpret random brightness changes as rapid motion/failure. | **Consistent per Window** |
+| **Random Rotation** | Rotates the image slightly by a random angle. | Simulates imperfect camera mounting or slight vibrations. | **± 10 Degrees** |
+| **Gaussian Blur** | Blurs the image to reduce sharpness. | Simulates cheap webcams or out-of-focus lenses, forcing the model to look for large features (spaghetti) rather than fine texture. | **p=0.2, Kernel=5** |
+| **Random Horizontal Flip** | Flips the image left-to-right (mirror effect). | Doubles data variance. A print failure is valid whether it "flows" left or right. | **p=0.5** |
+| **Color Jitter** | Randomly adjusts brightness, contrast, saturation, and hue. | Simulates extreme lighting conditions (e.g., night printing, harsh LED strips) to ensure the model isn't dependent on specific exposure. | **Bright=0.3, Contrast=0.3, Sat=0.1, Hue=0.05** |
+| **Normalization** | Scales pixel values to standard deviations. | Aligns input data with the pre-trained ImageNet statistics required for the MobileNetV3 weights. | **ImageNet Standard** |
+
+> *Note: Augmentations are only applied during the **Training** phase. Validation and Inference use only Resize and Normalization to ensure consistent evaluation.*
 
 ## 🤖 Model Selection and Training
 
+### MobileNet-GRU (Print detachment from Print bed classification)
+To solve the problem of real-time print detachment detection, we designed a custom hybrid architecture named **SpaghettiNet**. This model combines the spatial feature extraction capabilities of a Convolutional Neural Network (CNN) with the temporal sequence processing of a Recurrent Neural Network (RNN).
+
+Our architecture is a **Time-Distributed CNN + GRU** pipeline. We process video as a sequence of frames rather than individual images, allowing the model to understand the *motion* of failure (e.g., spaghetti forming over time) rather than just static shapes.
+
+| Component | Layer Type | Rationale |
+| :--- | :--- | :--- |
+| **Feature Extractor** | **MobileNetV3-Small** (Pre-trained) | A lightweight, low-latency CNN optimized for edge devices. We use it to convert each raw video frame (224x224) into a compact feature vector (size 576). |
+| **Temporal Logic** | **GRU** (Gated Recurrent Unit) | A recurrent layer that remembers the context of previous frames. It analyzes the *sequence* of feature vectors to detect changes over time. |
+| **Classifier** | **Linear + Sigmoid** | A simple fully connected layer that outputs a single probability score (0.0 - 1.0) indicating the likelihood of failure. |
+
+**Why GRU instead of LSTM?**
+We chose a GRU (Gated Recurrent Unit) over an LSTM because it has fewer parameters and offers faster inference speeds on embedded devices (like a Raspberry Pi) while maintaining comparable accuracy for short sequences.
+
+### Training Strategy
+The model was trained using a transfer learning approach, where the CNN weights were frozen to retain their ImageNet knowledge, and only the GRU and classification heads were trained.
+
+* **Loss Function:** `BCEWithLogitsLoss` (Binary Cross Entropy) — Ideal for binary classification (Normal vs. Detached).
+* **Optimizer:** Adam (Learning Rate: `1e-4`) — Chosen for stable convergence.
+* **Batch Size:** 4 Sequences (Effective batch size: 4 × 16 frames = 64 images per step).
+* **Sequence Length:** 16 Frames (representing 16 seconds of print time).
+
+### Hyperparameters
+| Parameter | Value | Description |
+| :--- | :--- | :--- |
+| **Input Size** | 224 × 224 | Standard MobileNet input resolution. |
+| **Hidden Size** | 128 | Number of features in the GRU hidden state. |
+| **Dropout** | 0.4 | Applied before the final layer to prevent overfitting. |
+| **Epochs** | 94 | Total training passes. |
+| **Train/Val Split** | 80% / 20% | Random split of video sequences. |
+
+We use a "Stateful" inference approach during live monitoring. The GRU's hidden memory is preserved between frames and only reset after a full window of 16 seconds, simulating a continuous stream of awareness.*
+
+<img src="explaination_data\transfer_GRU_data\training_graph.png" width="500" height="300" alt="Alt Text">
+
 ## 📈 Evaluation
+
+
 
 ## 💯 End Summary
 

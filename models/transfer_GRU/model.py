@@ -43,28 +43,28 @@ class SpaghettiNet(nn.Module):
         
         batch_size, seq_len, c, h, w = x.size()
         
-        # 1. Flatten Batch and Sequence dimensions
+        # Flatten Batch and Sequence dimensions
         # CNNs don't understand time, so we stack all frames like a huge batch of photos
         # Shape becomes: (Batch*16, 3, 224, 224)
         c_in = x.view(batch_size * seq_len, c, h, w)
         
-        # 2. Extract Features
+        # Extract Features
         # Shape: (Batch*16, 576)
         cnn_features = self.cnn(c_in)
         
-        # 3. Reshape back for GRU
+        # Reshape back for GRU
         # Shape: (Batch, 16, 576)
         rnn_input = cnn_features.view(batch_size, seq_len, -1)
         
-        # 4. Run GRU
+        # Run GRU
         # We process the whole sequence at once.
         # out shape: (Batch, 16, 128)
         out, _ = self.gru(rnn_input)
         
-        # 5. Classify based on the LAST frame of the sequence
+        # Classify based on the LAST frame of the sequence
         last_frame_out = out[:, -1, :] 
         
-        # 6. Final Prediction
+        # Final Prediction
         prediction = self.fc(self.dropout(last_frame_out))
         return prediction
 
@@ -73,23 +73,23 @@ class SpaghettiNet(nn.Module):
         LIVE MODE
         Input frame_tensor: (1, 3, 224, 224) -> Single Image
         """
-        # 1. Extract Features from single frame
+        # Extract Features from single frame
         # Shape: (1, 576)
         features = self.cnn(frame_tensor)
         
-        # 2. Add Sequence Dimension (Seq Length = 1)
+        # Add Sequence Dimension (Seq Length = 1)
         # Shape: (1, 1, 576)
         rnn_input = features.unsqueeze(1)
         
-        # 3. Run GRU using SAVED hidden state
+        # Run GRU using SAVED hidden state
         # We pass self.hidden_state to remind the GRU of the previous 15 frames
         out, self.hidden_state = self.gru(rnn_input, self.hidden_state)
         
-        # 4. Detach hidden state 
+        # Detach hidden state 
         # Crucial: Breaks the gradient graph so memory doesn't explode over hours
         self.hidden_state = self.hidden_state.detach()
         
-        # 5. Classify
+        # Classify
         # out shape: (1, 1, 128) -> squeeze to (1, 128)
         prediction_logit = self.fc(out[:, -1, :])
         

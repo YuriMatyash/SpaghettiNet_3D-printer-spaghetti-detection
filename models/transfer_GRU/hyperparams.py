@@ -16,18 +16,15 @@ IMG_SIZE = 224
 IMG_MEAN = [0.485, 0.456, 0.406]  # Standard ImageNet mean
 IMG_STD = [0.229, 0.224, 0.225]   # Standard ImageNet std
 
-TRAIN_TRANSFORMS = transforms.Compose([
-    transforms.Resize((IMG_SIZE, IMG_SIZE)),
-    
-    # Randomly flip horizontally (Mirror effect) - Doubles your data variation
-    transforms.RandomHorizontalFlip(p=0.5),
-    
-    # Randomly change brightness/contrast slightly (Simulate different times of day)
-    transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.1),
-    
-    transforms.ToTensor(),
-    transforms.Normalize(mean=IMG_MEAN, std=IMG_STD)
-])
+# AUGMENTATION PARAMETERS
+AUG_FLIP_PROB = 0.5         # 50% chance to flip horizontally
+AUG_ROTATION_DEGREES = 10   # Rotate +/- 10 degrees (simulates crooked camera)
+AUG_BRIGHTNESS = 0.3        # Increased to 0.3 (Printers often have harsh LED lighting)
+AUG_CONTRAST = 0.3          # Increased to 0.3
+AUG_SATURATION = 0.1        # Keep low (Filament color doesn't matter much)
+AUG_HUE = 0.05              # Slight hue shift
+AUG_BLUR_PROB = 0.2         # 20% chance to have a blurry lens
+AUG_BLUR_KERNEL = 5         # Kernel size (Must be odd: 3, 5, 7...)
 
 VAL_TRANSFORMS = transforms.Compose([
     transforms.Resize((IMG_SIZE, IMG_SIZE)),

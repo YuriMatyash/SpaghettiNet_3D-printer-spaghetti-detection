@@ -5,10 +5,7 @@ import re
 import hyperparams as hp
 
 
-"""
-Iterates over dataset/video_1, dataset/video_2... 
-and extracts mixed labels from each.
-"""
+# iterates through the dataset folders, creates sliding windows, and labels them
 def get_data_lists() -> tuple[list[list[str]], list[int]]:
     
     all_sequences = []
