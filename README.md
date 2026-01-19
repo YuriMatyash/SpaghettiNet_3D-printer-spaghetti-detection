@@ -2,11 +2,18 @@
 ![Ultralytics](https://img.shields.io/badge/ultralytics-006BD3?style=for-the-badge&logo=ultralytics&logoColor=white)
 ![PyTorch](https://img.shields.io/badge/PyTorch-%23EE4C2C.svg?style=for-the-badge&logo=PyTorch&logoColor=white)
 
-# 🖨️ 3D Printing Monitoring & Failure Detection system
+# 🖨️ BigPrintProtector - 3D Printing Monitoring & Failure Detection system
 
 A multi-model Deep Learning pipeline designed to monitor 3D printing processes in real-time, detect "Spaghetti" failures, track the toolhead, and identify bed adhesion issues.
 
----
+The README is divided into sections where in each section we go into depth about each model:
+* [**🧠 The Models**](#models)
+* [**📷 Dataset & Data Engineering**](#dataset)
+* [**📊 Exploratory Data Analysis (EDA)**](#eda)
+* [**🛠️ Data Augmentations**](#augmentations)
+* [**🤖 Model Selection and Training**](#training)
+* [**📈 Evaluation**](#evaluation)
+* [**💯 End Summary**](#summary)
 
 ## 📖 Project Overview
 3D printing is a time-intensive process where failures can lead to significant material waste and hardware damage. This project provides an automated solution using three specialized models to ensure the printing process remains within nominal parameters.
@@ -19,17 +26,17 @@ By providing real-time monitoring and automated failure detection:
 * **Time Efficiency:** Users receive instant notifications upon failure detection, preventing hours of useless printing on a failed build.
 * **Remote Monitoring:** Reduces the need for constant physical supervision, allowing the system to act as a "digital eye" that alerts the user only when intervention is required.
 
-## 🧠 The Models
+## <a id="models"></a>🧠 The Models
 
 | Model | Task | Description |
 | :--- | :--- | :--- |
-| **Spaghetti Detection** | Classification | Identifies if the print has failed and turned into a "spaghetti" mess. |
-| **Toolhead Detection** | Object Detection | Tracks the real-time position of the printer's extruder (Toolhead). |
-| **Bed Adhesion** | Attention Model | Uses spatial attention to detect if the print is lifting or shifting from the bed. |
+| [**Spaghetti Detection**](https://github.com/YuriMatyash/BigPrintProtector_3D-printer-spaghetti-detection/tree/main/models/classification) | Classification | Identifies if the print has failed and turned into a "spaghetti" mess. |
+| [**Toolhead Detection**](https://github.com/YuriMatyash/BigPrintProtector_3D-printer-spaghetti-detection/tree/main/models/detection) | Object Detection | Tracks the real-time position of the printer's extruder (Toolhead). |
+| [**Bed Adhesion**](https://github.com/YuriMatyash/BigPrintProtector_3D-printer-spaghetti-detection/tree/main/models/transfer_GRU) | CRNN (MobileNet-GRU) | Identifies print detachment failure. |
 
 ---
 
-## 📷 Dataset & Data Engineering
+## <a id="dataset"></a>📷 Dataset & Data Engineering
 A core contribution of this project is the creation of a custom dataset, as no comprehensive public datasets were available for these specific tasks.
 
 ### Classification (Spaghetti)
@@ -70,7 +77,7 @@ For the task of classiflying wether or not a print had detached from the print b
 <img src="explaination_data\transfer_GRU_data\1_detach.png" width="244" height="244" alt="Alt Text">
 <img src="explaination_data\transfer_GRU_data\1_post.png" width="244" height="244" alt="Alt Text">
 
-## 📊 Exploratory Data Analysis (EDA)
+## <a id="eda"></a>📊 Exploratory Data Analysis (EDA)
 
 ### Classification (Spaghetti)
 We performed a targeted EDA to ensure our classification model (Spaghetti vs. Good Print) learns actual visual features rather than dataset artifacts:
@@ -143,7 +150,7 @@ To verify this, we calculated the **Frame-to-Frame Pixel Difference (MSE)** acro
 * **The Spike (Red):** The moment of detachment creates a massive spike in motion energy. This confirms that there is a strong, sudden "motion signal" that the GRU can learn to detect.
 * **Chaotic Phase:** Post-detachment, the variance remains high and unpredictable (the "spaghetti" effect), distinguishing it clearly from the stable phase.
 
-## 🛠️ Data Augmentations
+## <a id="augmentations"></a>🛠️ Data Augmentations
 
 ### Classification (Spaghetti)
 
@@ -177,7 +184,7 @@ To prevent overfitting and ensure the model generalizes to different environment
 
 > *Note: Augmentations are only applied during the **Training** phase. Validation and Inference use only Resize and Normalization to ensure consistent evaluation.*
 
-## 🤖 Model Selection and Training
+## <a id="training"></a>🤖 Model Selection and Training
 
 ### Classification (Spaghetti)
 
@@ -208,7 +215,7 @@ To prevent overfitting and ensure the model generalizes to different environment
 
 
 ### MobileNet-GRU (Print detachment from Print bed classification)
-To solve the problem of real-time print detachment detection, we designed a custom hybrid architecture named **SpaghettiNet**. This model combines the spatial feature extraction capabilities of a Convolutional Neural Network (CNN) with the temporal sequence processing of a Recurrent Neural Network (RNN).
+To solve the problem of real-time print detachment detection, we designed a custom hybrid architecture named **BigPrintProtector**. This model combines the spatial feature extraction capabilities of a Convolutional Neural Network (CNN) with the temporal sequence processing of a Recurrent Neural Network (RNN).
 
 Our architecture is a **Time-Distributed CNN + GRU** pipeline. We process video as a sequence of frames rather than individual images, allowing the model to understand the *motion* of failure (e.g., spaghetti forming over time) rather than just static shapes.
 
@@ -243,7 +250,7 @@ We use a "Stateful" inference approach during live monitoring. The GRU's hidden 
 <img src="explaination_data\transfer_GRU_data\training_graph_v2.png" width="1000" height="400" alt="Alt Text">
 <img src="explaination_data\transfer_GRU_data\confusion_matrix.png" width="400" height="400" alt="Alt Text">
 
-## 📈 Evaluation
+## <a id="evaluation"></a>📈 Evaluation
 
 ### Classification (Spaghetti)
 
@@ -281,12 +288,12 @@ We use a "Stateful" inference approach during live monitoring. The GRU's hidden 
 * **Conservative Intervention:** While the model missed 3 detachment events (False Negatives), its perfect False Positive rate makes it an ideal "conservative" guardian—it only triggers when it is absolutely certain of a failure, guaranteeing a frustration-free user experience.
 
 <p align="center">
-  <img src="explaination_data/transfer_GRU_data/demo.gif" width="600" alt="SpaghettiNet Live Demo">
+  <img src="explaination_data/transfer_GRU_data/demo.gif" width="600" alt="BigPrintProtector Live Demo">
   <br>
   <em>Real-time inference running at 1 FPS</em>
 </p>
 
-## 💯 End Summary
+## <a id="summary"></a>💯 End Summary
 
 ### 🍝 Spaghetti Classification: The Safety Net
 
