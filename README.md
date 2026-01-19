@@ -1,3 +1,7 @@
+![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
+![Ultralytics](https://img.shields.io/badge/ultralytics-006BD3?style=for-the-badge&logo=ultralytics&logoColor=white)
+![PyTorch](https://img.shields.io/badge/PyTorch-%23EE4C2C.svg?style=for-the-badge&logo=PyTorch&logoColor=white)
+
 # 🖨️ 3D Printing Monitoring & Failure Detection system
 
 A multi-model Deep Learning pipeline designed to monitor 3D printing processes in real-time, detect "Spaghetti" failures, track the toolhead, and identify bed adhesion issues.
@@ -36,7 +40,7 @@ To build a robust classifier, we performed manual data curation:
 <img src="explaination_data/Classification_data/0_good.jpg" width="200" height="300" alt="Alt Text">
 <img src="explaination_data/Classification_data/0_spaghetti.jpg" width="200" height="300" alt="Alt Text">
 
-### Detection Data (Toolhead)
+### Detection (Toolhead)
 For the object detection task (YOLO-based), we created a targeted dataset:
 * **Sourcing:** We captured manual **screenshots** from various YouTube videos to represent a wide array of printer models, toolhead designs, and lighting conditions.
 * **Annotation:** All bounding boxes were manually drawn using **AnyLabeling**, providing the model with precise ground-truth data for the toolhead position.
@@ -71,15 +75,19 @@ For the task of classiflying wether or not a print had detached from the print b
 ### Classification (Spaghetti)
 We performed a targeted EDA to ensure our classification model (Spaghetti vs. Good Print) learns actual visual features rather than dataset artifacts:
 
-* Class Imbalance Check: We verified a balanced distribution between "Good" and "Spaghetti" samples to prevent the model from "cheating" by simply predicting the majority class.
+ #### Class Distribution & Class Balance: We showcase the distribution between "Good" and "Spaghetti" samples.
 
-* Visual Sanity Checks: Conducted random sampling to ensure data integrity and confirm that all "Spaghetti" labels accurately represent actual print failures.
+<img src="explaination_data\Classification_data\Class_balance.png" width="600" height="400" alt="Alt Text">
 
-* Structural Consistency ("Ghost" Images): We generated average images for both classes. "Good" prints showed a structured, consistent shape, while "Spaghetti" resulted in a chaotic blur, confirming distinct structural features for the model to learn.
+#### Structural Consistency ("Ghost" Images): We generated average images for both classes. "Good" prints showed a structured, consistent shape, while "Spaghetti" resulted in a chaotic blur, confirming distinct structural features for the model to learn.
 
-* Environmental Bias (Lighting): We analyzed brightness distribution across all samples to ensure the model learns based on texture and geometry rather than being biased by lighting conditions (e.g., night vs. day shots).
+<img src="explaination_data\Classification_data\image_analysis.png" width="600" height="400" alt="Alt Text">
 
-### Detection Data (Toolhead)
+#### Environmental Bias (Lighting): We analyzed brightness distribution across all samples to ensure the model learns based on texture and geometry rather than being biased by lighting conditions (e.g., night vs. day shots).
+
+<img src="explaination_data\Classification_data\brightness_distribution.png" width="600" height="400" alt="Alt Text">
+
+### Detection (Toolhead)
 
 For the Object Detection model (YOLO), we performed a specialized EDA to ensure the model effectively learns to locate the toolhead across different environments:
 
@@ -87,7 +95,24 @@ For the Object Detection model (YOLO), we performed a specialized EDA to ensure 
 
 * Box Aspect Ratio Analysis: We analyzed the height-to-width ratios of our boxes. This ensures our toolhead dimensions are compatible with YOLO's anchor boxes, helping the model predict shapes accurately rather than struggling with unusual proportions.
 
-* Location Heatmap: We mapped the spatial distribution of the toolhead across all images. This allowed us to verify that the toolhead appears in various positions (corners, edges, center), preventing the model from becoming biased toward a single "hotspot" in the frame.
+#### Class Balance
+
+<img src="explaination_data\detection_data\class_balance.png" width="600" height="400" alt="Alt Text">
+
+#### Object Size Distribution:
+Distance & Scale Invariance for Toolhead Tracking
+The Toolhead Detection model is optimized to maintain a precise lock on the extruder assembly regardless of its proximity to the lens or position in the build volume:
+
+* Adaptive Scale Training: Employs Scale and Random Cropping augmentations to identify toolhead features at various resolutions, ensuring stability across different camera mounting distances.
+
+* Small Object Precision: Prioritizes high-resolution feature extraction to accurately detect the toolhead even when its pixel footprint decreases at the furthest corners of the print bed.
+
+<img src="explaination_data\detection_data\Object size.png" width="400" height="400" alt="Alt Text">
+
+ #### Location Heatmap: 
+ We mapped the spatial distribution of the toolhead across all images. This allowed us to verify that the toolhead appears in various positions (corners, edges, center), preventing the model from becoming biased toward a single "hotspot" in the frame.
+
+<img src="explaination_data\detection_data\Heatmap.png" width="400" height="400" alt="Alt Text">
 
 
 
@@ -122,11 +147,11 @@ To verify this, we calculated the **Frame-to-Frame Pixel Difference (MSE)** acro
 
 ### Classification (Spaghetti)
 
-* Data Preprocessing: All images were resized from their original resolution to 224x224. This standardization ensures computational efficiency and prevents the model from being overburdened by excessively high-dimensional input.
+| Preprocessing Step | Description | Rationale | Metric |
+| :--- | :--- | :--- | :--- |
+| **Resolution Scaling** | All images were resized from their original resolution to **224x224** pixels. | Ensures computational efficiency and prevents the model from being overburdened by high-dimensional input. | **224 × 224** |
 
-### Detection Data (Toolhead)
-
-### Data Augmentation Summary
+### Detection (Toolhead)
 
 | Augmentation | Description | Rationale | Metric |
 | :--- | :--- | :--- | :--- |
@@ -156,23 +181,31 @@ To prevent overfitting and ensure the model generalizes to different environment
 
 ### Classification (Spaghetti)
 
-* SOTA Efficiency: YOLOv26 balances millisecond-level inference speed with superior mAP for high-performance real-time monitoring.
+#### Training Performance:
 
-* Area Attention (A2): Integrated attention modules capture global context, critical for identifying complex spatial anomalies and failures.
+* "While the model reached near 100% accuracy, we specifically aimed for high Recall to ensure that no print failure goes undetected. Our current results show a perfect recall rate, successfully catching all 'spaghetti' anomalies during validation to protect the hardware and save material."
 
-* Small Object Sensitivity: Refined receptive field control ensures high precision when detecting minute or early-stage defects.
+* Rapid & Stable Convergence: Both training and validation loss minimized sharply by the 5th epoch and remained stable thereafter, indicating a well-regularized training process without overfitting.
 
-* Robust Generalization: Optimized for "Bag of Freebies" like Mosaic and Mixup to maintain high accuracy across diverse environments.
+<img src="explaination_data\Classification_data\classification_training.png" width="600" height="400" alt="Alt Text">
+<img src="explaination_data\Classification_data\c_matrix.png" width="600" height="400" alt="Alt Text">
 
-### Detection Data (Toolhead)
 
-* SOTA Efficiency: YOLOv26 balances millisecond-level inference speed with superior mAP for high-performance real-time monitoring.
+### Detection (Toolhead)
 
-* Area Attention (A2): Integrated attention modules capture global context, critical for identifying complex spatial anomalies and failures.
+#### Training Performance:
 
-* Small Object Sensitivity: Refined receptive field control ensures high precision when detecting minute or early-stage defects.
+* The "Click" Moment: If you look at the accuracy charts, there is a massive jump right around Epoch 10. This is where the model "figured out" the core features of the toolhead and started tracking it reliably across the build plate.
 
-* Robust Generalization: Optimized for "Bag of Freebies" like Mosaic and Mixup to maintain high accuracy across diverse environments.
+* Solid Reliability: We hit a 90% mAP@50 score, which in plain English means the model is extremely dependable at spotting the toolhead in almost every frame, even during high-speed movements.
+
+* Precision and Detail: The mAP@50-95 score of 0.6 tells us that the bounding boxes aren't just "close"—they are tightly hugging the actual edges of the toolhead. This high level of precision is exactly what we need to calculate accurate $(x, y)$ coordinates.
+
+* Stable Learning: While the loss curves show some minor "wiggles" (which is normal as the model tries to handle different lighting and perspectives), the overall downward trend confirms that the model is genuinely learning features rather than just memorizing images.
+
+<img src="explaination_data\detection_data\Box_regression_loss.png" width="1200" height="600" alt="Alt Text">
+
+
 
 ### MobileNet-GRU (Print detachment from Print bed classification)
 To solve the problem of real-time print detachment detection, we designed a custom hybrid architecture named **SpaghettiNet**. This model combines the spatial feature extraction capabilities of a Convolutional Neural Network (CNN) with the temporal sequence processing of a Recurrent Neural Network (RNN).
@@ -212,19 +245,46 @@ We use a "Stateful" inference approach during live monitoring. The GRU's hidden 
 ## 📈 Evaluation
 
 ### Classification (Spaghetti)
-![alt text](image.png)
+
+* Near-Perfect Accuracy: The model achieved near 100% Top-1 validation accuracy within 10 epochs, with qualitative testing showing 99.5%-100% confidence scores on unseen validation data.
+
+* Zero Misclassifications: The confusion matrix confirms 100% precision and recall across 252 validation samples, successfully identifying all 203 clean prints and 49 spaghetti failures with zero false alarms.
+
+* Robust Spatial Coverage: Rapid loss convergence indicates efficient feature learning, while spatial heatmaps verify the model remains accurate regardless of where the failure occurs on the print bed.
+
+* Reliable Real-Time Intervention: These metrics demonstrate a highly dependable system capable of triggering immediate hardware intervention the moment a printing anomaly is detected.
+
+<img src="explaination_data\Classification_data\results.png" width="1200" height="600" alt="Alt Text">
 
 
-### Detection Data (Toolhead)
+### Detection (Toolhead)
 
+* Learning Curve: The model had a "lightbulb moment" around Epoch 10, where accuracy (mAP) surged as it mastered the toolhead's geometry. It stabilized at a mAP@50 of ~0.9, meaning it is incredibly consistent at finding the toolhead even during fast movements.
 
+* Spatial Coverage: Our Object Location Heatmap confirms that we didn't just train on center-frame images; the model successfully recognizes the toolhead across the entire build plate, ensuring no "blind spots" at the edges of the bed.
+
+* Real-World Confidence: In live tests, the model consistently returns confidence scores between 0.88 and 0.95, proving it can distinguish the toolhead from the printed part and background clutter with high certainty.
+
+<img src="explaination_data\detection_data\toolhead_1.png" width="400" height="400" alt="Alt Text">
+<img src="explaination_data\detection_data\toolhead_2.png" width="400" height="400" alt="Alt Text">
+<img src="explaination_data\detection_data\toolhead_3.png" width="400" height="400" alt="Alt Text">
 
 
 
 ## 💯 End Summary
 
+### 🍝 Spaghetti Classification: The Safety Net
 
+The classification model serves as the system's primary failsafe. By achieving near-perfect recall, the model ensures that catastrophic failures—where filament turns into a tangled mess-are identified instantly.
 
+* Key Achievement: 100% precision and recall on validation sets, meaning zero false alarms for the user and zero missed failures for the hardware.
+
+* Impact: Drastic reduction in material waste and a significant decrease in the risk of "the blob" (molten plastic encasing the hotend). 
+
+### 🏗️ Toolhead Detection (Research Phase)
+The toolhead detection model was developed using a YOLO-based architecture to provide real-time spatial tracking of the extruder.
+* **Performance:** Reached a solid **90% mAP@50**, successfully mastering the toolhead's geometry across the entire build plate.
+* **Outcome:** Although the model performed well technically, it was **not included in the final production system**. The decision was made to omit this model because it was not longer nessecesry for the rest of our system.
 ---
 
 ## 🛠️ Tech Stack
