@@ -1,3 +1,7 @@
+![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
+![Ultralytics](https://img.shields.io/badge/ultralytics-006BD3?style=for-the-badge&logo=ultralytics&logoColor=white)
+![PyTorch](https://img.shields.io/badge/PyTorch-%23EE4C2C.svg?style=for-the-badge&logo=PyTorch&logoColor=white)
+
 # 🖨️ 3D Printing Monitoring & Failure Detection system
 
 A multi-model Deep Learning pipeline designed to monitor 3D printing processes in real-time, detect "Spaghetti" failures, track the toolhead, and identify bed adhesion issues.
@@ -143,7 +147,9 @@ To verify this, we calculated the **Frame-to-Frame Pixel Difference (MSE)** acro
 
 ### Classification (Spaghetti)
 
-* Data Preprocessing: All images were resized from their original resolution to 224x224. This standardization ensures computational efficiency and prevents the model from being overburdened by excessively high-dimensional input.
+| Preprocessing Step | Description | Rationale | Metric |
+| :--- | :--- | :--- | :--- |
+| **Resolution Scaling** | All images were resized from their original resolution to **224x224** pixels. | Ensures computational efficiency and prevents the model from being overburdened by high-dimensional input. | **224 × 224** |
 
 ### Detection (Toolhead)
 
@@ -275,14 +281,10 @@ The classification model serves as the system's primary failsafe. By achieving n
 
 * Impact: Drastic reduction in material waste and a significant decrease in the risk of "the blob" (molten plastic encasing the hotend). 
 
-### 🏗️ Toolhead Detection: Spatial Intelligence
-Using a specialized YOLO-based architecture, the Toolhead Detection model provides the system with context. By tracking the extruder with 90% mAP@50 accuracy, the system understands exactly where the printer is active.
-
-* Key Achievement: High-precision bounding boxes (0.6 mAP@50-95) that maintain a lock on the toolhead regardless of its position on the bed or the complexity of the printed part.
-
-* Impact: Enables advanced spatial analysis, allowing the system to distinguish between the moving toolhead and the static print, which is crucial for preventing false positives in failure detection.
-
-
+### 🏗️ Toolhead Detection (Research Phase)
+The toolhead detection model was developed using a YOLO-based architecture to provide real-time spatial tracking of the extruder.
+* **Performance:** Reached a solid **90% mAP@50**, successfully mastering the toolhead's geometry across the entire build plate.
+* **Outcome:** Although the model performed well technically, it was **not included in the final production system**. The decision was made to omit this model because it was not longer nessecesry for the rest of our system.
 ---
 
 ## 🛠️ Tech Stack
