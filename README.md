@@ -235,12 +235,13 @@ The model was trained using a transfer learning approach, where the CNN weights 
 | **Input Size** | 224 × 224 | Standard MobileNet input resolution. |
 | **Hidden Size** | 128 | Number of features in the GRU hidden state. |
 | **Dropout** | 0.4 | Applied before the final layer to prevent overfitting. |
-| **Epochs** | 94 | Total training passes. |
+| **Epochs** | 137 | Total training passes. |
 | **Train/Val Split** | 80% / 20% | Random split of video sequences. |
 
 We use a "Stateful" inference approach during live monitoring. The GRU's hidden memory is preserved between frames and only reset after a full window of 16 seconds, simulating a continuous stream of awareness.*
 
-<img src="explaination_data\transfer_GRU_data\training_graph.png" width="500" height="300" alt="Alt Text">
+<img src="explaination_data\transfer_GRU_data\training_graph_v2.png" width="1000" height="400" alt="Alt Text">
+<img src="explaination_data\transfer_GRU_data\confusion_matrix.png" width="400" height="400" alt="Alt Text">
 
 ## 📈 Evaluation
 
@@ -270,6 +271,20 @@ We use a "Stateful" inference approach during live monitoring. The GRU's hidden 
 <img src="explaination_data\detection_data\toolhead_3.png" width="400" height="400" alt="Alt Text">
 
 
+### MobileNet-GRU (Print detachment from Print bed classification)
+* **Zero False Alarms (Precision Focused):** The confusion matrix reveals a highly precise system with **100% Precision** on the validation set. It correctly identified 8 clean prints and 12 failures with **zero false positives**. This is critical for 3D printing monitoring, as it ensures the system never pauses a successful print unnecessarily.
+
+* **Stable Convergence:** The training graph demonstrates clear learning behavior. The Training Loss (Red) decreases steadily from ~0.7 to <0.1 over 200 epochs, while the Validation Accuracy (Blue) climbs from ~40% to a peak of **~87%**. This confirms the GRU is successfully learning the temporal features of "spaghetti" formation despite the complexity of the video data.
+
+* **Perfect Discriminative Ability:** The Receiver Operating Characteristic (ROC) curve shows an **Area Under Curve (AUC) of 1.00**. This indicates that the model has perfectly separated the probability distributions for "Normal" and "Detached" classes, suggesting that with threshold tuning, the recall (currently 80%) can be further improved without sacrificing precision.
+
+* **Conservative Intervention:** While the model missed 3 detachment events (False Negatives), its perfect False Positive rate makes it an ideal "conservative" guardian—it only triggers when it is absolutely certain of a failure, guaranteeing a frustration-free user experience.
+
+<p align="center">
+  <img src="explaination_data/transfer_GRU_data/demo.gif" width="600" alt="SpaghettiNet Live Demo">
+  <br>
+  <em>Real-time inference running at 1 FPS</em>
+</p>
 
 ## 💯 End Summary
 
@@ -285,13 +300,45 @@ The classification model serves as the system's primary failsafe. By achieving n
 The toolhead detection model was developed using a YOLO-based architecture to provide real-time spatial tracking of the extruder.
 * **Performance:** Reached a solid **90% mAP@50**, successfully mastering the toolhead's geometry across the entire build plate.
 * **Outcome:** Although the model performed well technically, it was **not included in the final production system**. The decision was made to omit this model because it was not longer nessecesry for the rest of our system.
----
 
-## 🛠️ Tech Stack
-* **Language:** Python
-* **Deep Learning Framework:** PyTorch
-* **Object Detection:** YOLO
-* **Data Labeling:** AnyLabeling
-* **Video Processing:** OpenCV & Manual Video Editing Tools
+### 🎞️ MobileNet-GRU (Print detachment from Print bed classification)
+Unlike standard image classifiers that analyze a single static snapshot, this hybrid architecture analyzes the motion of the print over a 16-second window to detect bed adhesion failures.
+
+* **Key Achievement:** Achieved **Zero False Positives (100% Precision)** on the validation set. This confirms the system's ability to act as a "conservative guardian," ensuring that a successful print is never interrupted by a false alarm.
+* **Impact:** By combining the lightweight **MobileNetV3** with a memory-based **GRU**, the system successfully distinguishes between the rhythmic, predictable motion of a healthy print and the sudden, chaotic spike of a print detaching from the bed.
+
+
+## 🛠 Tech Stack
+
+### Core Frameworks
+* **Language:** Python 3.x
+* **Deep Learning:** PyTorch ( `torch`, `torch.nn`, `torch.optim`)
+* **Computer Vision:** * `torchvision` (Pre-trained models & transforms)
+    * `OpenCV` (cv2) (Video frame extraction & color conversion)
+    * `Pillow` (PIL) (Image manipulation)
+
+### Model Architectures
+
+1.  **MobileNet-GRU (Print detachment from Print bed classification)**
+    * **CNN Backbone:** MobileNetV3-Small (Pre-trained on ImageNet, frozen weights).
+    * **Temporal Processor:** Gated Recurrent Unit (GRU) with 128 hidden units.
+    * **Input Strategy:** Sliding window sequences of 16 frames.
+    * **Architecture:** CNN Feature Extractor $\rightarrow$ RNN Sequence Modeling $\rightarrow$ Binary Classification Head.
+
+2.  **Toolhead Detection/Spaghetti Classification**
+    * **Framework:** Ultralytics YOLO26.
+    * **Usage:** Used for Object Detection and Classification
+
+### Data Processing & Training
+* **Data Loading:** Custom `PrinterFrameDataset` with sliding window logic for temporal continuity.
+* **Augmentation Pipeline:** * Geometry: Random Horizontal Flip, Rotation ($\pm 10^{\circ}$).
+    * Visual: Gaussian Blur (simulating focus issues), Color Jitter (Brightness, Contrast, Saturation).
+* **Optimization:** Adam Optimizer (`lr=1e-4`) with Binary Cross Entropy loss.
+* **Hardware Support:** Native support for **NVIDIA CUDA**
+
+### Analysis & Tools
+* **Visualization:** `Matplotlib` and `Seaborn` for training curves and confusion matrices.
+* **Metrics:** `Scikit-Learn` for accuracy and confusion metric calculations.
+* **Showcasing:** Jupyter Notebooks (`.ipynb`).
 
 ---

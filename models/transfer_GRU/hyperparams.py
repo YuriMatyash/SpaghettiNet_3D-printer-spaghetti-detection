@@ -64,5 +64,5 @@ MODEL_SAVE_PATH = "models/transfer_GRU/spaghettinet_v3.pth"     # Where to save 
 
 # INFERENCE / LIVE MONITORING
 CAMERA_INDEX = 0         # 0 = Default Webcam
-ALARM_THRESHOLD = 0.75   # Trigger alarm if probability > X
+ALARM_THRESHOLD = 0.6     # Trigger alarm if probability > X
 STARTUP_GRACE_PERIOD = 5 # Ignore alarms for first X frames
